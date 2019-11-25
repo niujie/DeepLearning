@@ -22,3 +22,18 @@ print(tf.stack([x[1, 1], x[2, 2], x[3, 3]], axis=0))
 # 5.6.2 tf.gather_nd
 print(tf.gather_nd(x, [[1, 1], [2, 2], [3, 3]]))
 print(tf.gather_nd(x, [[1, 1, 2], [2, 2, 3], [3, 3, 4]]))
+
+# 5.6.3 tf.boolean_mask
+print(tf.boolean_mask(x, mask=[True, False, False, True], axis=0))
+print(tf.boolean_mask(x, mask=[True, False, False, True, True, False, False, True], axis=2))
+
+x = tf.random.uniform([2, 3, 8], maxval=100, dtype=tf.int32)
+print(tf.gather_nd(x, [[0, 0], [0, 1], [1, 1], [1, 2]]))    # multi-dim pos sampling
+print(tf.boolean_mask(x, [[True, True, False], [False, True, True]]))   # multi-dim mask sampling
+
+# 5.6.4 tf.where
+a = tf.ones([3, 3])   # create a with all ones
+b = tf.zeros([3, 3])  # create b with all zeros
+# create sampling mask
+cond = tf.constant([[True, False, False], [False, True, False], [True, True, False]])
+print(tf.where(cond, a, b))
