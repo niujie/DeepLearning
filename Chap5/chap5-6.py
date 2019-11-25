@@ -37,3 +37,5 @@ b = tf.zeros([3, 3])  # create b with all zeros
 # create sampling mask
 cond = tf.constant([[True, False, False], [False, True, False], [True, True, False]])
 print(tf.where(cond, a, b))
+print(cond)
+print(tf.where(cond))  # obtain pos of True in cond
