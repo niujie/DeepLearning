@@ -10,9 +10,9 @@ print(pred)
 y = tf.random.uniform([100], dtype=tf.int64, maxval=10)
 print(y)
 
-out = tf.equal(pred, y) # compare prediction and true tag
+out = tf.equal(pred, y)  # compare prediction and true tag
 print(out)
 
 out = tf.cast(out, dtype=tf.float32)
-correct = tf.reduce_sum(out)    # count the true values
+correct = tf.reduce_sum(out)  # count the true values
 print(correct)

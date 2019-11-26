@@ -6,8 +6,8 @@ print(tf.maximum(x, 2))
 print(tf.minimum(x, 7))
 
 
-def relu(x):
-    return tf.minimum(x, 0.)  # limit the lower range as 0
+def relu(_x):
+    return tf.minimum(_x, 0.)  # limit the lower range as 0
 
 
 print(tf.minimum(tf.maximum(x, 2), 7))  # limit to 2 ~ 7

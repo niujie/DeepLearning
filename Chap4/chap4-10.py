@@ -1,9 +1,8 @@
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import datasets
 import os
 import matplotlib
+import tensorflow as tf
 from matplotlib import pyplot as plt
+from tensorflow.keras import datasets
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -43,7 +42,7 @@ lr = 1e-3
 
 losses = []
 
-for epoch in range(20):     # iterate db for 10
+for epoch in range(20):     # iterate db for 20
     for step, (x, y) in enumerate(train_db):    # for every batch
         # x: [128, 28, 28]
         # y: [128]

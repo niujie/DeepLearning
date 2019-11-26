@@ -1,4 +1,4 @@
-# Tensorflow basics
+# TensorFlow basics
 import tensorflow as tf
 
 # 4.1.1 Data type
