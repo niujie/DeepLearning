@@ -54,6 +54,16 @@ out = network.predict(x)    # 模型预测
 print(out)
 network.evaluate(val_db)
 
+acc_meter = tf.keras.metrics.Accuracy()  # 创建准确率测量器
+out = network(x)
+pred = tf.argmax(out, axis=1)
+pred = tf.cast(pred, dtype=tf.int32)
+# 根据预测值与真实值写入测量器
+acc_meter.update_state(y, pred)
+# 读取统计结果
+print('Evaluate Acc: ', acc_meter.result().numpy())
+acc_meter.reset_states()    # 清零测量器
+
 # 8.3 模型保存与加载
 '''
 # 8.3.1 张量方式
