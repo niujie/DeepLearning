@@ -1,5 +1,8 @@
 import matplotlib
 from matplotlib import pyplot as plt
+import tensorflow as tf
+from tensorflow.keras import datasets
+import os
 
 # Default parameters for plots
 matplotlib.rcParams['font.size'] = 20
@@ -7,9 +10,6 @@ matplotlib.rcParams['figure.titlesize'] = 20
 matplotlib.rcParams['figure.figsize'] = [9, 7]
 matplotlib.rcParams['font.family'] = ['STKaiTi']
 matplotlib.rcParams['axes.unicode_minus'] = False
-import tensorflow as tf
-from tensorflow.keras import datasets
-import os
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 print(tf.__version__)
@@ -65,6 +65,10 @@ def main():
     w2, b2 = tf.Variable(tf.random.normal([256, 128], stddev=0.1)), tf.Variable(tf.zeros(128))
     # 256 => 10
     w3, b3 = tf.Variable(tf.random.normal([128, 10], stddev=0.1)), tf.Variable(tf.zeros(10))
+
+    # 创建监控类，监控数据将写入log_dir目录
+    log_dir = './log'
+    summary_writer = tf.summary.create_file_writer(log_dir)
 
     for step, (_x, _y) in enumerate(train_db):
 
@@ -124,6 +128,18 @@ def main():
             print(step, 'Evaluate Acc:', total_correct / total)
 
             accs.append(total_correct / total)
+
+            with summary_writer.as_default():
+                # 当前时间戳step上的数据为loss，写入到ID位train-loss对象中
+                tf.summary.scalar('train-loss', float(loss), step=step)
+                # 写入测试准确率
+                tf.summary.scalar('test-acc', float(total_correct/total), step=step)
+                # 可视化测试用的图片，设置最多可视化9张图片
+                # tf.summary.image("val-onebyone-images:", val_images, max_outputs=9, step=step)
+                # 可视化真实标签直方图分布
+                tf.summary.histogram('y-hist', y, step=step)
+                # 查看文本信息
+                tf.summary.text('loss-text', str(float(loss)), step=step)
 
     plt.figure()
     _x = [i * 80 for i in range(len(losses))]
