@@ -33,11 +33,11 @@ print(x.shape, y.shape, x_test.shape, y_test.shape)
 
 train_db = tf.data.Dataset.from_tensor_slices((x, y))  # 构建训练集
 # 随机打散，预处理，批量化
-train_db = train_db.shuffle(1000).map(preprocess).batch(128)
+train_db = train_db.shuffle(1000).map(preprocess).batch(32)
 
 test_db = tf.data.Dataset.from_tensor_slices((x_test, y_test))  # 构建测试集
 # 预处理，批量化
-test_db = test_db.map(preprocess).batch(128)
+test_db = test_db.map(preprocess).batch(32)
 
 # 采样一个样本
 sample = next(iter(train_db))
@@ -166,7 +166,7 @@ def main():
             # 更新网络参数
             optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
-            if step % 50 == 0:
+            if step % 500 == 0:
                 print(epoch, step, 'loss:', float(loss))
 
         total_num = 0
