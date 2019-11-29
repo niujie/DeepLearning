@@ -16,7 +16,7 @@ X, y = make_moons(n_samples=N_SAMPLES, noise=0.25, random_state=100)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=TEST_SIZE, random_state=42)
 print(X.shape, y.shape)
 
-
+'''
 # 绘制数据集的分布，X为2D坐标，y为数据点的标签
 def make_plot(_X, _y, plot_name, file_name=None, XX=None, YY=None, preds=None):
     plt.figure()
@@ -113,3 +113,4 @@ for _lambda in [1e-5, 1e-3, 1e-1, 0.12, 0.13]:  # 设置不同的正则化系数
     title = "正则化".format(_lambda)
     file = "正则化%f.svg" % _lambda
     make_plot(X_train, y_train, title, file, XX, YY, preds)
+'''
