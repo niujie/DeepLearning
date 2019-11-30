@@ -1,4 +1,4 @@
-# 11.11.1 LSTM模型
+# 11.12 预训练的词向量
 import os
 import tensorflow as tf
 import numpy as np
@@ -23,9 +23,6 @@ if gpus:
         # 异常处理
         print(e)
 
-# for LSTMCell computation
-# tf.compat.v1.disable_eager_execution()
-
 batchsz = 128  # 批量大小
 total_words = 10000  # 词汇表大小N_vocab
 max_review_len = 80  # 句子最大长度s，大于的句子部分将截断，小于的将填充
@@ -39,7 +36,7 @@ print(x_test.shape, len(x_test[0]), y_test.shape)
 word_index = keras.datasets.imdb.get_word_index()
 # for k,v in word_index.items():
 #     print(k,v)
-# %%
+
 word_index = {k: (v + 3) for k, v in word_index.items()}
 word_index["<PAD>"] = 0
 word_index["<START>"] = 1
@@ -50,11 +47,43 @@ reverse_word_index = dict([(value, key) for (key, value) in word_index.items()])
 
 
 def decode_review(text):
-    return ' '.join([reverse_word_index.get(i, '?') for i in text])
+    return ' '.join([reverse_word_index.get(_i, '?') for _i in text])
 
 
 print(decode_review(x_train[8]))
 
+# print('Indexing word vectors.')
+# embeddings_index = {}
+# GLOVE_DIR = r'C:\Users\jay_n\.keras\datasets\glove6b50dtxt'
+'''
+with open(os.path.join(GLOVE_DIR, 'glove.6B.100d.txt'), encoding='utf-8') as f:
+    for line in f:
+        values = line.split()
+        word = values[0]
+        coefs = np.asarray(values[1:], dtype='float32')
+        embeddings_index[word] = coefs
+
+print('Found %s word vectors.' % len(embeddings_index))
+
+print(len(embeddings_index.keys()))
+print(len(word_index.keys()))
+
+MAX_NUM_WORDS = total_words
+# prepare embedding matrix
+num_words = min(MAX_NUM_WORDS, len(word_index))
+embedding_matrix = np.zeros((num_words, embedding_len))
+applied_vec_count = 0
+for word, i in word_index.items():
+    if i >= MAX_NUM_WORDS:
+        continue
+    embedding_vector = embeddings_index.get(word)
+    # print(word,embedding_vector)
+    if embedding_vector is not None:
+        # words not found in embedding index will be all-zeros.
+        embedding_matrix[i] = embedding_vector
+        applied_vec_count += 1
+print(applied_vec_count, embedding_matrix.shape)
+'''
 # x_train:[b, 80]
 # x_test: [b, 80]
 # 截断和填充句子，使得等长，此处长句子保留句子后面的部分，短句子在前面填充
@@ -70,29 +99,24 @@ print('x_test shape:', x_test.shape)
 
 
 class MyRNN(keras.Model):
-    # Cell方式构建多层网络
+    # layer方式构建多层网络
     def __init__(self, units):
         super(MyRNN, self).__init__()
         # 词向量编码 [b, 80] => [b, 80, 100]
         self.embedding = layers.Embedding(total_words, embedding_len,
-                                          input_length=max_review_len)
-        '''
-        # [b, 64]，构建Cell初始化状态向量，重复使用
-        self.state0 = [tf.zeros([batchsz, units]), tf.zeros([batchsz, units])]
-        self.state1 = [tf.zeros([batchsz, units]), tf.zeros([batchsz, units])]
-        # 构建2个Cell
-        self.rnn_cell0 = layers.LSTMCell(units, dropout=0.5)
-        self.rnn_cell1 = layers.LSTMCell(units, dropout=0.5)
-        '''
+                                          input_length=max_review_len,
+                                          trainable=False)
+        self.embedding.build(input_shape=(None, max_review_len))
+        # self.embedding.set_weights([embedding_matrix])
         # 构建RNN
-        self.rnn = Sequential([
+        self.rnn = keras.Sequential([
             layers.LSTM(units, dropout=0.5, return_sequences=True),
             layers.LSTM(units, dropout=0.5)
         ])
         # 构建分类网络，用于将CELL的输出特征进行分类，2分类
         # [b, 80, 100] => [b, 64] => [b, 1]
         self.outlayer = Sequential([
-            layers.Dense(units),
+            layers.Dense(32),
             layers.Dropout(rate=0.5),
             layers.ReLU(),
             layers.Dense(1)])
@@ -102,16 +126,8 @@ class MyRNN(keras.Model):
         # embedding: [b, 80] => [b, 80, 100]
         x = self.embedding(x)
         # rnn cell compute,[b, 80, 100] => [b, 64]
-        '''
-        state0 = self.state0
-        state1 = self.state1
-        for word in tf.unstack(x, axis=1):  # word: [b, 100]
-            out0, state0 = self.rnn_cell0(word, state0, training)
-            out1, state1 = self.rnn_cell1(out0, state1, training)
-        '''
         x = self.rnn(x)
         # 末层最后一个输出作为分类网络的输入: [b, 64] => [b, 1]
-        # x = self.outlayer(out1, training)
         x = self.outlayer(x, training)
         # p(y is pos|x)
         prob = tf.sigmoid(x)
@@ -120,12 +136,12 @@ class MyRNN(keras.Model):
 
 
 def main():
-    units = 64  # RNN状态向量长度f
+    units = 512  # RNN状态向量长度f
     epochs = 20  # 训练epochs
 
     model = MyRNN(units)
     # 装配
-    model.compile(optimizer=optimizers.RMSprop(0.001),
+    model.compile(optimizer=optimizers.Adam(0.001),
                   loss=losses.BinaryCrossentropy(),
                   metrics=['accuracy'])
     # 训练和验证

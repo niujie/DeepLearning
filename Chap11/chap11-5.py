@@ -7,8 +7,21 @@ tf.random.set_seed(22)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 assert tf.__version__.startswith('2.')
 
+# 获取所有GPU设备列表
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+    try:
+        # 设置GPU显存占用为按需分配
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+        logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+        print(len(gpus), "Physical GPUS,", len(logical_gpus), "Logical GPUs")
+    except RuntimeError as e:
+        # 异常处理
+        print(e)
+
 # for SimpleRNNCell computation
-# tf.compat.v1.disable_eager_execution()
+tf.compat.v1.disable_eager_execution()
 
 # 11.5.1 数据集
 batchsz = 128  # 批量大小
@@ -58,7 +71,7 @@ class MyRNN(tf.keras.Model):
         super(MyRNN, self).__init__()
         # 词向量编码[b, 80] => [b, 80, 100]
         self.embedding = layers.Embedding(total_words, embedding_len, input_length=max_review_len)
-        '''
+
         # [b, 64]，构建Cell初始化状态向量，重复使用
         self.state0 = [tf.zeros([batchsz, units])]
         self.state1 = [tf.zeros([batchsz, units])]
@@ -71,6 +84,7 @@ class MyRNN(tf.keras.Model):
             layers.SimpleRNN(units, dropout=0.5, return_sequences=True),
             layers.SimpleRNN(units, dropout=0.5)
         ])
+        '''
         # 构建分类网络，用于将CELL的输出特征进行分类，2分类
         # [b, 80, 100] => [b, 64] => [b, 1]
         self.outlayer = Sequential([
@@ -84,17 +98,17 @@ class MyRNN(tf.keras.Model):
         # embedding: [b, 80] => [b, 80, 100]
         x = self.embedding(x)
         # rnn cell compute, [b, 80, 100] => [b, 64]
-        '''
+
         state0 = self.state0
         state1 = self.state1
         for word in tf.unstack(x, axis=1):  # word: [b, 100]
             out0, state0 = self.rnn_cell0(word, state0, training)
             out1, state1 = self.rnn_cell1(out0, state1, training)
-        '''
-        x = self.rnn(x)
+
+        # x = self.rnn(x)
         # 末层最后一个输出作为分类网络的输入：[b, 64] => [b, 1]
-        # x = self.outlayer(out1, training)
-        x = self.outlayer(x, training)
+        x = self.outlayer(out1, training)
+        # x = self.outlayer(x, training)
         # p(y is pos|x)
         prob = tf.sigmoid(x)
 
