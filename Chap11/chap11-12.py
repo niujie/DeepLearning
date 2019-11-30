@@ -54,7 +54,7 @@ print(decode_review(x_train[8]))
 
 print('Indexing word vectors.')
 embeddings_index = {}
-GLOVE_DIR = r'C:\Users\jay_n\.keras\datasets'
+GLOVE_DIR = r'/Users/niujie/.keras/datasets/glove.6B'
 
 with open(os.path.join(GLOVE_DIR, 'glove.6B.100d.txt'), encoding='utf-8') as f:
     for line in f:
