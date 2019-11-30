@@ -9,7 +9,7 @@ tf.random.set_seed(22)
 np.random.seed(22)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 assert tf.__version__.startswith('2.')
-
+'''
 # 获取所有GPU设备列表
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
@@ -22,7 +22,7 @@ if gpus:
     except RuntimeError as e:
         # 异常处理
         print(e)
-
+'''
 batchsz = 128  # 批量大小
 total_words = 10000  # 词汇表大小N_vocab
 max_review_len = 80  # 句子最大长度s，大于的句子部分将截断，小于的将填充
@@ -52,10 +52,10 @@ def decode_review(text):
 
 print(decode_review(x_train[8]))
 
-# print('Indexing word vectors.')
-# embeddings_index = {}
-# GLOVE_DIR = r'C:\Users\jay_n\.keras\datasets\glove6b50dtxt'
-'''
+print('Indexing word vectors.')
+embeddings_index = {}
+GLOVE_DIR = r'C:\Users\jay_n\.keras\datasets'
+
 with open(os.path.join(GLOVE_DIR, 'glove.6B.100d.txt'), encoding='utf-8') as f:
     for line in f:
         values = line.split()
@@ -83,7 +83,7 @@ for word, i in word_index.items():
         embedding_matrix[i] = embedding_vector
         applied_vec_count += 1
 print(applied_vec_count, embedding_matrix.shape)
-'''
+
 # x_train:[b, 80]
 # x_test: [b, 80]
 # 截断和填充句子，使得等长，此处长句子保留句子后面的部分，短句子在前面填充
@@ -107,7 +107,7 @@ class MyRNN(keras.Model):
                                           input_length=max_review_len,
                                           trainable=False)
         self.embedding.build(input_shape=(None, max_review_len))
-        # self.embedding.set_weights([embedding_matrix])
+        self.embedding.set_weights([embedding_matrix])
         # 构建RNN
         self.rnn = keras.Sequential([
             layers.LSTM(units, dropout=0.5, return_sequences=True),
@@ -136,7 +136,7 @@ class MyRNN(keras.Model):
 
 
 def main():
-    units = 512  # RNN状态向量长度f
+    units = 128  # RNN状态向量长度f
     epochs = 20  # 训练epochs
 
     model = MyRNN(units)
