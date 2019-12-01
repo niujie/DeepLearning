@@ -97,8 +97,8 @@ def main():
     is_training = True
 
     # 获取数据集路径
-    img_path = glob.glob(r'C:\Users\jay_n\Documents\DeepLearning\TensorFlow深度学习\Chap13\faces\*.jpg') + \
-        glob.glob(r'C:\Users\jay_n\Documents\DeepLearning\TensorFlow深度学习\Chap13\faces\*.png')
+    img_path = glob.glob(r'C:\Users\jay_n\.keras\datasets\faces\*.jpg') + \
+        glob.glob(r'C:\Users\jay_n\.keras\datasets\faces\*.png')
     print('images num:', len(img_path))
     # 构建数据集对象
     dataset, img_shape, _ = make_anime_dataset(img_path, batch_size, resize=64)
