@@ -6,7 +6,7 @@ import os
 directory = './vae_images'
 os.chdir(directory)
 
-anim_file = 'vae-gen.gif'
+anim_file = 'vae-sampled.gif'
 
 with imageio.get_writer(anim_file, mode='I') as writer:
     filenames = glob.glob('sampled_epoch*.png')

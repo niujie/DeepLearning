@@ -71,3 +71,40 @@ class Discriminator(keras.Model):
         self.flatten = layers.Flatten()
         # 2分类全连接层
         self.fc = layers.Dense(1)
+
+    def call(self, inputs, training=None):
+        # 卷积-BN-激活函数：(4, 31, 31, 64)
+        x = tf.nn.leaky_relu(self.bn1(self.conv1(inputs), training=training))
+        # 卷积-BN-激活函数：(4, 14, 14, 128)
+        x = tf.nn.leaky_relu(self.bn2(self.conv2(x), training=training))
+        # 卷积-BN-激活函数：(4, 6, 6, 256)
+        x = tf.nn.leaky_relu(self.bn3(self.conv3(x), training=training))
+        # 卷积-BN-激活函数：(4, 4, 4, 512)
+        x = tf.nn.leaky_relu(self.bn4(self.conv4(x), training=training))
+        # 卷积-BN-激活函数：(4, 2, 2, 1024)
+        x = tf.nn.leaky_relu(self.bn5(self.conv5(x), training=training))
+        # 卷积-BN-激活函数：(4, 1024)
+        x = self.pool(x)
+        # 打平
+        x = self.flatten(x)
+        # 输出，[b, 1024] => [b, 1]
+        logits = self.fc(x)
+
+        return logits
+
+
+def main():
+    d = Discriminator()
+    g = Generator()
+
+    x = tf.random.normal([2, 64, 64, 3])
+    z = tf.random.normal([2, 100])
+
+    prob = d(x)
+    print(prob)
+    x_hat = g(z)
+    print(x_hat.shape)
+
+
+if __name__ == '__main__':
+    main()
