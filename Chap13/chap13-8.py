@@ -1,8 +1,8 @@
-# 13.3.4 训练与可视化
+# WGAN-GP实战
 import os
-import numpy as np
 import tensorflow as tf
 from tensorflow import keras
+import numpy as np
 from PIL import Image
 import glob
 from gan import Generator, Discriminator
@@ -53,58 +53,67 @@ def save_result(val_out, val_block_size, image_path, color_mode):
     Image.fromarray(final_image).convert('RGB').save(image_path)
 
 
-def celoss_ones(logits):
-    # 计算属于与标签为1的交叉熵
-    y = tf.ones_like(logits)
-    loss = keras.losses.binary_crossentropy(y, logits, from_logits=True)
-    return tf.reduce_mean(loss)
+def gradient_penalty(discriminator, batch_x, fake_image):
+    # 梯度惩罚项计算函数
+    batchsz = batch_x.shape[0]
 
+    # 每个样本均随机采样t，用于插值
+    t = tf.random.uniform([batchsz, 1, 1, 1])
+    # 自动扩展为x的形状，[b, 1, 1, 1] => [b, h, w, c]
+    t = tf.broadcast_to(t, batch_x.shape)
+    # 在真假图片之间做线性插值
+    interpolate = t * batch_x + (1 - t) * fake_image
+    # 在梯度环境中计算D对插值样本对梯度
+    with tf.GradientTape() as tape:
+        tape.watch([interpolate])  # 加入梯度观察列表
+        d_interpolate_logits = discriminator(interpolate)
+    grads = tape.gradient(d_interpolate_logits, interpolate)
 
-def celoss_zeros(logits):
-    # 计算属于与标签为0的交叉熵
-    y = tf.zeros_like(logits)
-    loss = keras.losses.binary_crossentropy(y, logits, from_logits=True)
-    return tf.reduce_mean(loss)
+    # 计算每个样本对梯度对范数：[b, h, w, c] => [b, -1]
+    grads = tf.reshape(grads, [grads.shape[0], -1])
+    gp = tf.norm(grads, axis=1)  # [b]
+    # 计算梯度惩罚项
+    gp = tf.reduce_mean((gp - 1.) ** 2)
+
+    return gp
 
 
 def d_loss_fn(generator, discriminator, batch_z, batch_x, is_training):
-    # 计算判别器的误差函数
-    # 采样生成图片
-    fake_image = generator(batch_z, is_training)
+    # 计算D的损失函数
+    fake_image = generator(batch_z, is_training)  # 假样本
     # 判定生成图片
-    d_fake_logits = discriminator(fake_image, is_training)
+    d_fake_logits = discriminator(fake_image, is_training)  # 假样本的输出
     # 判定真实图片
-    d_real_logits = discriminator(batch_x, is_training)
+    d_real_logits = discriminator(batch_x, is_training)  # 真样本的输出
+    # 计算梯度惩罚项
+    gp = gradient_penalty(discriminator, batch_x, fake_image)
+    # WGAN-GP D损失函数的定义，这里并不是计算交叉熵，而是直接最大化正样本的输出
+    # 最小化假样本的输出和梯度惩罚项
     # 真实图片与1之间的误差
-    d_loss_real = celoss_ones(d_real_logits)
-    # 生成图片与0之间的误差
-    d_loss_fake = celoss_zeros(d_fake_logits)
-    # 合并误差
-    loss = d_loss_fake + d_loss_real
+    loss = tf.reduce_mean(d_fake_logits) - tf.reduce_mean(d_real_logits) + 10. * gp
 
-    return loss
+    return loss, gp
 
 
 def g_loss_fn(generator, discriminator, batch_z, is_training):
-    # 采样生成图片
+    # 生成器的损失函数
     fake_image = generator(batch_z, is_training)
     # 在训练生成网络时，需要迫使生成图片判定为真
     d_fake_logits = discriminator(fake_image, is_training)
-    # 计算生成图片与1之间的误差
-    loss = celoss_ones(d_fake_logits)
+    # WGAN-GP G损失函数，最大化假样本的输出值
+    loss = - tf.reduce_mean(d_fake_logits)
 
     return loss
 
 
 def main():
-
     tf.random.set_seed(3333)
     np.random.seed(3333)
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
     assert tf.__version__.startswith('2.')
 
-    z_dim = 100     # 隐藏向量z的长度
-    epochs = 3000000    # 训练步数
+    z_dim = 100  # 隐藏向量z的长度
+    epochs = 3000000  # 训练步数
     batch_size = 64
     learning_rate = 0.0002
     is_training = True
@@ -116,7 +125,7 @@ def main():
     # 构建数据集对象
     dataset, img_shape, _ = make_anime_dataset(img_path, batch_size, resize=64)
     print(dataset, img_shape)
-    sample = next(iter(dataset))    # 采样
+    sample = next(iter(dataset))  # 采样
     print(sample.shape, tf.reduce_max(sample).numpy(), tf.reduce_min(sample).numpy())
     dataset = dataset.repeat(100)
     db_iter = iter(dataset)
@@ -139,16 +148,16 @@ def main():
         for _ in range(1):
             # 采样隐藏向量
             batch_z = tf.random.normal([batch_size, z_dim])
-            batch_x = next(db_iter)     # 采样真实图片
+            batch_x = next(db_iter)  # 采样真实图片
             # 判别器前向计算
             with tf.GradientTape() as tape:
-                d_loss = d_loss_fn(generator, discriminator, batch_z, batch_x, is_training)
+                d_loss, _ = d_loss_fn(generator, discriminator, batch_z, batch_x, is_training)
             grads = tape.gradient(d_loss, discriminator.trainable_variables)
             d_optimizer.apply_gradients(zip(grads, discriminator.trainable_variables))
         # 2. 训练生成器
         # 采样隐藏向量
         batch_z = tf.random.normal([batch_size, z_dim])
-        batch_x = next(db_iter)     # 采样真实图片
+        batch_x = next(db_iter)  # 采样真实图片
         # 生成器前向计算
         with tf.GradientTape() as tape:
             g_loss = g_loss_fn(generator, discriminator, batch_z, is_training)
