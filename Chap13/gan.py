@@ -2,6 +2,19 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
+# 获取所有GPU设备列表
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+    try:
+        # 设置GPU显存占用为按需分配
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+        logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+        print(len(gpus), "Physical GPUS,", len(logical_gpus), "Logical GPUs")
+    except RuntimeError as e:
+        # 异常处理
+        print(e)
+
 
 # 13.3.2 生成器
 class Generator(keras.Model):
@@ -51,19 +64,19 @@ class Discriminator(keras.Model):
         super(Discriminator, self).__init__()
         _filter = 64
         # 卷积层1
-        self.conv1 = layers.Con2D(_filter, 4, 2, 'valid', use_bias=False)
+        self.conv1 = layers.Conv2D(_filter, 4, 2, 'valid', use_bias=False)
         self.bn1 = layers.BatchNormalization()
         # 卷积层2
-        self.conv2 = layers.Con2D(_filter * 2, 4, 2, 'valid', use_bias=False)
+        self.conv2 = layers.Conv2D(_filter * 2, 4, 2, 'valid', use_bias=False)
         self.bn2 = layers.BatchNormalization()
         # 卷积层3
-        self.conv3 = layers.Con2D(_filter * 4, 4, 2, 'valid', use_bias=False)
+        self.conv3 = layers.Conv2D(_filter * 4, 4, 2, 'valid', use_bias=False)
         self.bn3 = layers.BatchNormalization()
         # 卷积层4
-        self.conv4 = layers.Con2D(_filter * 8, 3, 1, 'valid', use_bias=False)
+        self.conv4 = layers.Conv2D(_filter * 8, 3, 1, 'valid', use_bias=False)
         self.bn4 = layers.BatchNormalization()
         # 卷积层5
-        self.conv5 = layers.Con2D(_filter * 16, 3, 1, 'valid', use_bias=False)
+        self.conv5 = layers.Conv2D(_filter * 16, 3, 1, 'valid', use_bias=False)
         self.bn5 = layers.BatchNormalization()
         # 全局池化层
         self.pool = layers.GlobalAveragePooling2D()

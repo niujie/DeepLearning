@@ -8,6 +8,19 @@ import glob
 from gan import Generator, Discriminator
 from dataset import make_anime_dataset
 
+# 获取所有GPU设备列表
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+    try:
+        # 设置GPU显存占用为按需分配
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+        logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+        print(len(gpus), "Physical GPUS,", len(logical_gpus), "Logical GPUs")
+    except RuntimeError as e:
+        # 异常处理
+        print(e)
+
 
 def save_result(val_out, val_block_size, image_path, color_mode):
     def preprocess(img):
@@ -116,9 +129,9 @@ def main():
     g_optimizer = keras.optimizers.Adam(learning_rate=learning_rate, beta_1=0.5)
     d_optimizer = keras.optimizers.Adam(learning_rate=learning_rate, beta_1=0.5)
 
-    generator.load_weights('generator.ckpt')
-    discriminator.load_weights('discriminator.ckpt')
-    print('Loaded ckpt!!')
+    # generator.load_weights('generator.ckpt')
+    # discriminator.load_weights('discriminator.ckpt')
+    # print('Loaded ckpt!!')
 
     d_losses, g_losses = [], []
     for epoch in range(epochs):
