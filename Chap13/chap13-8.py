@@ -119,8 +119,8 @@ def main():
     is_training = True
 
     # 获取数据集路径
-    img_path = glob.glob(r'/Users/niujie/.keras/datasets/faces/*.jpg') + \
-        glob.glob(r'/Users/niujie/.keras/datasets/faces/*.png')
+    img_path = glob.glob(r'C:\Users\jay_n\.keras\datasets\faces\*.jpg') + \
+        glob.glob(r'C:\Users\jay_n\.keras\datasets\faces\*.png')
     print('images num:', len(img_path))
     # 构建数据集对象
     dataset, img_shape, _ = make_anime_dataset(img_path, batch_size, resize=64)
@@ -145,7 +145,7 @@ def main():
     d_losses, g_losses = [], []
     for epoch in range(epochs):
         # 1. 训练判别器
-        for _ in range(1):
+        for _ in range(10):
             # 采样隐藏向量
             batch_z = tf.random.normal([batch_size, z_dim])
             batch_x = next(db_iter)  # 采样真实图片
