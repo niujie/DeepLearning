@@ -74,7 +74,7 @@ def main():
     print_interval = 20  # 打印间隔
     returns = []
 
-    for n_epi in range(10000):
+    for n_epi in range(400):
         s = env.reset()  # 回到游戏初始状态，返回s0
         with tf.GradientTape(persistent=True) as tape:
             for t in range(501):  # CartPole-v1 forced to terminates at 500 step.

@@ -145,7 +145,7 @@ def main():
     d_losses, g_losses = [], []
     for epoch in range(epochs):
         # 1. 训练判别器
-        for _ in range(10):
+        for _ in range(1):
             # 采样隐藏向量
             batch_z = tf.random.normal([batch_size, z_dim])
             batch_x = next(db_iter)  # 采样真实图片
@@ -157,7 +157,6 @@ def main():
         # 2. 训练生成器
         # 采样隐藏向量
         batch_z = tf.random.normal([batch_size, z_dim])
-        batch_x = next(db_iter)  # 采样真实图片
         # 生成器前向计算
         with tf.GradientTape() as tape:
             g_loss = g_loss_fn(generator, discriminator, batch_z, is_training)
