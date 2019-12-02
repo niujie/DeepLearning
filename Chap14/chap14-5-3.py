@@ -27,6 +27,19 @@ np.random.seed(1231)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 assert tf.__version__.startswith('2.')
 
+# 获取所有GPU设备列表
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+    try:
+        # 设置GPU显存占用为按需分配
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+        logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+        print(len(gpus), "Physical GPUS,", len(logical_gpus), "Logical GPUs")
+    except RuntimeError as e:
+        # 异常处理
+        print(e)
+
 
 class ActorCritic(keras.Model):
     # Actor-Critic模型
