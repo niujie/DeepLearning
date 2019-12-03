@@ -58,7 +58,7 @@ db_test = db_test.map(preprocess).batch(batchsz)
 
 # 15.3.3 创建模型
 # 加载DenseNet网络模型，并去掉最后一层全连接层，最后一个池化层设置为max pooling
-net = keras.applications.DenseNet121(include_top=False, pooling='max')
+net = keras.applications.DenseNet121(weights='imagenet', include_top=False, pooling='max')
 # 设计为不参与优化，即MobileNet这部分参数固定不动
 net.trainable = False
 newnet = keras.Sequential([
